@@ -1,0 +1,354 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Edge;
+using OpenQA.Selenium.Interactions;
+using OpenQA.Selenium.Support.UI;
+using SeleniumExtras.WaitHelpers;
+using System;
+using System.Threading;
+
+namespace UnitTests
+{
+    [TestClass]
+    public class InitialRenderingTest
+    {
+        // In order to run the below test(s), 
+        // please follow the instructions from https://docs.microsoft.com/en-us/microsoft-edge/webdriver-chromium
+        // to install Microsoft Edge WebDriver.
+
+        private static ChromeDriver _driver;
+        //private static EdgeDriver _driver;
+
+
+        [ClassInitialize]
+        public static void ChromeDriverInitialize(TestContext testContext)
+        {
+            // Initialize chrome driver 
+            var options = new ChromeOptions
+            {
+                PageLoadStrategy = PageLoadStrategy.Normal
+            };
+            _driver = new ChromeDriver(Environment.CurrentDirectory, options);
+            _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(50);
+            _driver.Navigate().GoToUrl("https://localhost:44331/");
+        }
+
+        //[ClassInitialize]
+        //public static void EdgeDriverInitialize(TestContext testContext)
+        //{
+        //    // Initialize chrome driver 
+        //    var options = new EdgeOptions
+        //    {
+        //        PageLoadStrategy = PageLoadStrategy.Normal
+        //    };
+        //    _driver = new EdgeDriver(Environment.CurrentDirectory, options);
+        //    _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(50);
+        //    _driver.Navigate().GoToUrl("https://localhost:44331/");
+        //}
+        //public WebDriverWait GetWait(int min)
+        //{
+        //    WebDriverWait wait = new WebDriverWait(_driver, timeout: TimeSpan.FromMinutes(min))
+        //    {
+        //        PollingInterval = TimeSpan.FromSeconds(5),
+        //    };
+        //    wait.IgnoreExceptionTypes(typeof(NoSuchElementException));
+
+        //    return wait;
+        //}
+
+        [TestMethod("VerifyPageTitle")]
+        public void Test1()
+        {
+            Assert.AreEqual("aiKira", _driver.Title);
+        }
+
+
+        [TestMethod("VerifyHeader")]
+        public void Test2()
+        {
+
+            var loginButton =  _driver.FindElement(By.CssSelector(".GuestloginPageArea button"));
+
+            Assert.IsNotNull(loginButton, "Rendering of login button failed");
+
+            loginButton.Click();
+
+            var bodyContent = _driver.FindElement(By.ClassName("container-fluidInner"));
+
+            Assert.IsNotNull(bodyContent, "Rendering of BodyContent failed");
+
+            var header = _driver.FindElement(By.ClassName("headerCard"));
+
+            Assert.IsNotNull(header, "Rendering of header failed");
+
+            var headerElements = _driver.FindElements(By.CssSelector(".headerCard .rightsideArea ul li"));
+
+            Assert.IsTrue(headerElements.Count > 0, "Rendering of Header Elements failed");
+
+        }
+
+        [TestMethod("VerifyNavMenu")]
+        public void Test3()
+        {
+
+            var bodyContent = _driver.FindElement(By.ClassName("container-fluidInner"));
+
+            Assert.IsNotNull(bodyContent, "Rendering of BodyContent failed");
+
+            var sidebar = _driver.FindElement(By.ClassName("leftsideBar"));
+
+            Assert.IsNotNull(sidebar, "Rendering of side bar failed");
+
+            var navmenu = _driver.FindElements(By.CssSelector(".menuArea .parentMenuIcon"));
+
+            Assert.IsNotNull(navmenu, "Rendering of Nav Menu failed");
+
+            Assert.IsTrue(navmenu.Count > 0, "Rendering of Nav Menu failed");
+
+            var childmenu = _driver.FindElements(By.CssSelector(".menuArea .parentMenuIcon .insideMenuList li"));
+
+            Assert.IsTrue(childmenu.Count > 0, "Rendering of Child menus failed");
+
+        }
+
+        [TestMethod("All Journals Search Functionality")]
+        public void Test4()
+        {
+
+            var allJournalsMenu = _driver.FindElement(By.Id("Journal_Menu"));
+
+            Assert.IsNotNull(allJournalsMenu, "Rendering of Journal Menu Failed");
+
+            allJournalsMenu.Click();
+
+            var mainBody = _driver.FindElement(By.Id("mainBodyInner"));
+
+            Assert.IsNotNull(mainBody);
+
+            var journalCards = _driver.FindElements(By.CssSelector(".mainBodyInner .journalViewScreen .parentJournal"));
+
+            Assert.IsNotNull(journalCards, "Rendering of journal cards failed");
+
+            Assert.AreEqual(2, journalCards.Count, "Rendering of journal cards failed");
+
+            var searchBar = _driver.FindElement(By.CssSelector(".SearchInputArea input"));
+
+            Assert.IsNotNull(searchBar, "Rendering of search bar failed");
+
+            searchBar.SendKeys("stra");
+
+            var searchedCards = _driver.FindElements(By.CssSelector(".mainBodyInner .journalViewScreen .parentJournal"));
+
+            Assert.IsNotNull(searchedCards);
+
+            Assert.AreEqual(1, searchedCards.Count, "Searching of journals failed");
+
+            var clearSearch = _driver.FindElement(By.Id("search_clearbutton"));
+
+            clearSearch.Click();
+
+            searchedCards = _driver.FindElements(By.CssSelector(".mainBodyInner .journalViewScreen .parentJournal"));
+
+            Assert.IsTrue(searchedCards.Count > 1, "Clear search for journals failed");
+        }
+
+        [TestMethod("All Journals Journal Click Functionality")]
+        public void Test5()
+        {
+            var journalCards = _driver.FindElements(By.CssSelector(".mainBodyInner .journalViewScreen .parentJournal"));
+
+            Assert.IsNotNull(journalCards);
+
+            Assert.IsTrue(journalCards.Count > 1);
+
+            journalCards[1].Click();
+
+            var tab = _driver.FindElement(By.ClassName("tab"));
+
+            Assert.IsNotNull(tab);
+
+            var tabTitle = _driver.FindElement(By.ClassName("backTitle"));
+
+            Assert.IsNotNull(tabTitle);
+
+            var backBtn = _driver.FindElement(By.CssSelector(".back.image"));
+
+            Assert.IsNotNull(backBtn);
+
+            var tabHeaders = _driver.FindElements(By.CssSelector(".tab-header .btn.tab-header-item"));
+
+            Assert.IsNotNull(tabHeaders);
+
+            Assert.IsTrue(tabHeaders.Count > 1);
+
+            Assert.AreEqual("Journal Properties", tabHeaders[0].Text, "Rendering of Journal Properties failed");
+        }
+
+        [TestMethod("Instructions Module Functionalities")]
+        public void Test6()
+        {
+            var tabHeaders = _driver.FindElements(By.CssSelector(".tab-header .btn.tab-header-item"));
+
+            Assert.IsNotNull(tabHeaders);
+
+            var instructionstab = _driver.FindElement(By.Id("Instructions_tabheader"));
+
+            Assert.IsNotNull(instructionstab, "Instructions tab is not rendered");
+
+            instructionstab.Click();
+
+            var addBtn = _driver.FindElement(By.Id("addInstructionBtn"));
+
+            Assert.IsNotNull(addBtn, "Add Instruction button is not rendered");
+
+            var showDel = _driver.FindElement(By.Id("showDel"));
+
+            Assert.IsNotNull(showDel, "Rendering of Show deleted checkbox failed");
+
+            var instructions = _driver.FindElements(By.CssSelector(".instContent .accordionGroup.accordionNew"));
+
+            Assert.IsTrue(instructions.Count > 1, "Rendering of instructions failed");
+
+            var firstInstruction = instructions[0];
+
+            firstInstruction.Click();
+
+            var panel = firstInstruction.FindElement(By.CssSelector(".accordionGroup.active .accordion.active + .panel"));
+
+            Assert.IsNotNull(panel, "Instruction Expand functionality not working");
+
+            Assert.AreEqual("block", panel.GetCssValue("display"), "Instruction Expand functionality not working");
+
+			firstInstruction.Click();
+
+            var expandedInstr = _driver.FindElement(By.CssSelector(".accordionGroup.active .accordion.active"));
+
+            Assert.IsNotNull(expandedInstr);
+
+            expandedInstr.Click();
+
+            var hiddenPanel = _driver.FindElement(By.CssSelector(".accordionGroup .accordion + .panel"));
+
+			Assert.AreEqual("none", hiddenPanel.GetCssValue("display"), "Instruction Collapse functionality not working");
+
+		}
+
+        [TestMethod("Add Instruction Functionality")]
+        public void Test7()
+        {
+			var addBtn = _driver.FindElement(By.Id("addInstructionBtn"));
+
+			Assert.IsNotNull(addBtn, "Add Instruction button is not rendered");
+
+            addBtn.Click();
+
+            Thread.Sleep(2000);
+
+            var dialog = _driver.FindElement(By.Id("addInstructionDialog"));
+
+            Assert.IsNotNull(dialog, "Instruction Add dialog not rendered");
+
+            Assert.AreNotEqual("none", dialog.GetCssValue("display"), "Add Instruction Button click is not working");
+
+            var chapterdd = dialog.FindElement(By.CssSelector(".instrChapterdd .e-multi-select-wrapper"));
+
+            new Actions(_driver).Click(chapterdd).Perform();
+          
+
+            Thread.Sleep(1000);
+
+            var categorydd = dialog.FindElement(By.CssSelector(".instrCategory .e-multi-select-wrapper"));
+
+            new Actions(_driver).Click(categorydd).Perform();
+
+
+            Thread.Sleep(1000);
+
+            var stagedd = dialog.FindElement(By.CssSelector(".instrStage .e-multi-select-wrapper"));
+
+            new Actions(_driver).Click(stagedd).Perform();
+
+
+            Thread.Sleep(1000);
+
+            var cancelbtn = _driver.FindElement(By.Id("InstructionCancel"));
+
+            cancelbtn.Click();
+
+			Thread.Sleep(3000);
+
+			dialog = _driver.FindElement(By.Id("addInstructionDialog"));
+
+            Assert.AreEqual("none", dialog.GetCssValue("display"), "Add Instruction Dialog cancel is not working");
+
+		}
+
+        [TestMethod("ProofSetting Verfication")]
+        public void Test8()
+        {
+            //Diaglogverify
+            var ele = _driver.FindElement(By.Id("AuthorProofingDetails"));
+            string heading = ele.GetAttribute("id");
+            Assert.AreEqual("AuthorProofingDetails", heading);
+
+
+            //TitleVerify
+            var element = _driver.FindElement(By.Id("pauseModels"));
+            string titleValue = element.GetAttribute("title");
+            Assert.AreEqual("Proof Settings", titleValue);
+
+
+            //Email-Verfiy
+            var emailinputField = _driver.FindElement(By.Id("autocomplete"));
+            string value = emailinputField.GetAttribute("value");
+            Assert.IsNull(value, "Email field must be empty at intially");
+                  //into the input field
+            emailinputField.SendKeys("basineni.kumar@straive.com");
+                  // Wait for the dynamic list of autocomplete options to appear
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            By autocompleteListLocator = By.CssSelector("ul[class~=ui-autocomplete]");
+            wait.Until(ExpectedConditions.ElementIsVisible(autocompleteListLocator));
+                  // Locate the specific option from the autocomplete list and click it
+            var autocompleteOption = _driver.FindElement(By.CssSelector("ul[class~=ui-autocomplete] li"));
+            autocompleteOption.Click();
+
+
+            //NameVerify
+            var inputNameField = _driver.FindElement(By.CssSelector("input[type='text']"));
+            string name = inputNameField.GetAttribute("value");
+            Assert.IsNotNull(name, "Name should be filled by automatically");
+
+
+            //RoleVerify
+            var selectRoleField = _driver.FindElement(By.Id("Role"));
+            string role = selectRoleField.GetAttribute("value");
+            Assert.AreEqual("Select Role", role);
+            SelectElement selectElement = new SelectElement(selectRoleField);
+            selectElement.SelectByIndex(1);
+            Assert.AreEqual("Author", selectRoleField.GetAttribute("value"));
+
+            //Corresponding Author 
+            var checkbox = _driver.FindElement(By.Id("CorresAuthor"));
+            var checkboxLabel = _driver.FindElement(By.CssSelector("label[for='CorresAuthor']"));           
+            string labelName = checkboxLabel.Text;
+            Assert.AreEqual("Corresponding Author", labelName);
+            string isChecked =Convert.ToString(checkbox.Selected);
+            Assert.AreEqual("True", isChecked);
+            checkbox.Click();
+
+            //AddUser
+            var btn = _driver.FindElement(By.CssSelector("button[title='Add New']"));
+            btn.Click();
+            //string error = (string)((IJavaScriptExecutor)_driver).ExecuteScript("return OnFormValidate();");
+            //Assert.AreEqual(string.Empty, error);
+           
+        }
+
+        [ClassCleanup]
+        public static void EdgeDriverCleanup()
+        {
+            _driver.Quit();
+        }
+    }
+}
